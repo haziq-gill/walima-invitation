@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Haziq & Laveeza Tahir | Wedding Invitation</title><style>html,body{margin:0;background:#102d22;color:#f3e8d1;font:16px Georgia,serif}#loading{min-height:100vh;display:grid;place-items:center;text-align:center;padding:22px;box-sizing:border-box}#loading h1{font-weight:normal;color:#caa765;font-size:38px}#loading p{line-height:1.6}</style></head><body>
+<div id="loading"><div><h1>Haziq &amp; Laveeza</h1><p>Opening your Walima invitation…</p><p id="status" style="font-size:13px">An internet connection is required to load the original invitation design.</p></div></div>
+<script>
+(async function(){
+  const status=document.getElementById('status');
+  try {
+    // Load the repository's original commit, not its latest index.html, to avoid recursion if published.
+    const commitsResponse=await fetch('https://api.github.com/repos/haziq-gill/Wedding-invitation/commits?path=index.html&per_page=100',{cache:'no-store'});
+    if(!commitsResponse.ok) throw new Error('Unable to retrieve the original version of the invitation.');
+    const commits=await commitsResponse.json();
+    if(!Array.isArray(commits)||!commits.length) throw new Error('Original website commit was not found.');
+    const originalCommit=commits[commits.length-1].sha;
+    const sourceURL='https://raw.githubusercontent.com/haziq-gill/Wedding-invitation/'+originalCommit+'/index.html';
+    const response=await fetch(sourceURL,{cache:'force-cache'});
+    if(!response.ok) throw new Error('Could not load the original styled invitation.');
+    let html=await response.text();
+    if(!html.includes('class="screen"')||!html.includes('countdown')) throw new Error('The original invitation structure was not recognized.');
+    // Preserve the original HTML, styles and scripts. Edit only specific content after it loads.
+    const patch=String.raw`(function(){
+  const dua='بَارَكَ اللَّهُ لَكَ، وَبَارَكَ عَلَيْكَ، وَجَمَعَ بَيْنَكُمَا فِي خَيْرٍ';
+  const translation='May Allah bless you, bestow His blessings upon you, and bring you together in goodness.';
+  const lookup=(s)=>Array.from(document.querySelectorAll(s));
+  const replaceText=(node,from,to)=>{if(node && node.nodeType===3 && node.nodeValue.includes(from)) node.nodeValue=node.nodeValue.replaceAll(from,to)};
+  // Update the bride's name and parent names without changing markup or formatting.
+  const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+  while(walker.nextNode()){
+    const t=walker.currentNode;
+    replaceText(t,'Laveza','Laveeza Tahir');
+    replaceText(t,'Mr. & Mrs. Waheed Ul Haq','Mr & Mrs Waheed ul haq gill');
+    replaceText(t,'Mr. & Mrs. Waheed Ul Haq','Mr & Mrs Waheed ul haq gill');
+  }
+  // Parents occur in split text nodes in the original cover; update that element directly.
+  const parents=document.querySelector('.parents strong');
+  if(parents) parents.textContent='Mr & Mrs Waheed ul haq gill';
+  const invitationSection=document.querySelector('#invited');
+  if(invitationSection){
+    const familyLine=Array.from(invitationSection.querySelectorAll('p')).find(p=>/Waheed Ul Haq|Waheed ul haq/i.test(p.textContent));
+    if(familyLine) familyLine.textContent=familyLine.textContent.replace(/Mr\.?\s*&\s*Mrs\.?\s*Waheed Ul Haq/i,'Mr & Mrs Waheed ul haq gill');
+  }
+  document.title='Haziq & Laveeza Tahir | Wedding Invitation';
+  const desc=document.querySelector('meta[name="description"]');
+  if(desc) desc.content='The Gill family invites you to celebrate Haziq Gill and Laveeza Tahir, 24–26 December 2026.';
+
+  // Replace ONLY the screenshot's countdown + three-card blessings area with dua.
+  const blessing=lookup('section').find(s=>s.classList.contains('blessing-section') || s.querySelector('.blessing-grid') || (s.querySelector('h2')?.textContent||'').includes('Three Days, One Beautiful Beginning'));
+  if(blessing){
+    const originalInner=blessing.querySelector('.content-inner')||blessing;
+    originalInner.innerHTML='<div class="eyebrow">A prayer for the newlyweds</div><h2 lang="ar" dir="rtl" style="font-family:&#39;Noto Naskh Arabic&#39;,serif;font-size:clamp(33px,6vw,62px);line-height:1.6">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</h2><div class="flourish">✦</div><p lang="ar" dir="rtl" style="font-family:\'Noto Naskh Arabic\',serif;font-size:clamp(28px,5vw,47px);line-height:2.15;color:#173d2d;margin:24px auto;max-width:790px">'+dua+'</p><p class="blessing-quote" style="max-width:720px!important">“'+translation+'”</p><div class="flourish">✦</div>';
+  }
+  const countdown= document.querySelector('.countdown');
+  const timerSection= countdown?.closest('section');
+  const events=lookup('section').find(s=>(s.querySelector('h2')?.textContent||'').includes('When & where'));
+  // Keep the existing live timer and its IDs, moving it to event-dates section.
+  if(countdown && events){
+    const where=events.querySelector('.content-inner')||events;
+    const heading=document.createElement('div'); heading.className='eyebrow'; heading.style.marginTop='34px';heading.textContent='Counting down';
+    const title=document.createElement('h2');title.textContent='Until we celebrate';title.style.fontSize='clamp(40px,7vw,60px)';
+    const note=document.createElement('p');note.style.fontSize='12px';note.textContent='Until Mehndi begins — 24 December 2026, 9 PM (Pakistan time)';
+    const firstEvents=where.querySelector('.events');
+    if(firstEvents){where.insertBefore(heading,firstEvents);where.insertBefore(title,firstEvents);where.insertBefore(countdown,firstEvents);where.insertBefore(note,firstEvents)}
+    else{where.append(heading,title,countdown,note)}
+    // Remove only the original countdown section, leaving all other page sections intact.
+    if(timerSection && timerSection!==events) timerSection.remove();
+  }
+  // Update the Walima event card specifically.
+  const walima=lookup('.event').find(el=>(el.querySelector('h3')?.textContent||'').trim()==='Walima');
+  if(walima){
+    const time=walima.querySelector('.time'); if(time)time.textContent='7:00 PM';
+    const detail=walima.querySelector('.detail');if(detail)detail.textContent='Walima celebration at Qasr Al Hamra Marquee Jahanian';
+  }
+  // Retain the original venue block and map button styling; update Walima venue reference.
+  const venue=document.querySelector('.venue');
+  if(venue){
+    const name=venue.querySelector('strong');if(name)name.textContent='Qasr Al Hamra Marquee Jahanian';
+    const venueP=venue.querySelector('p');if(venueP)venueP.textContent='Jahanian, Pakistan · Walima — Saturday, 26 December 2026, 7:00 PM';
+    let map=venue.querySelector('a');
+    if(!map){map=document.createElement('a');map.className='btn';venue.appendChild(map)}
+    map.href='https://maps.app.goo.gl/2snWMErjbuxS7yBT8?g_st=ic';map.target='_blank';map.rel='noopener noreferrer';map.textContent='Open in Google Maps ↗';
+  }
+  // Adjust RSVP names and add the supplied contact number.
+  const rsvp=lookup('section').find(s=>(s.querySelector('h2')?.textContent||'').trim()==='RSVP');
+  if(rsvp){
+    for(const p of rsvp.querySelectorAll('p')){
+      if(p.textContent.includes('Arsal Gill') && p.textContent.includes('Sami Gill')) p.textContent='Waheed Gill, Sami Gill, Arsal Gill';
+      if(p.textContent.includes('Contact numbers will be shared')) p.innerHTML='<a href="tel:+923052546295">03052546295</a>';
+    }
+  }
+  // Merge the repeated invitation card into the existing wedding cover.
+  // The cover illustration, typography, decorations, dates and animations stay unchanged.
+  const repeatCard=document.querySelector('#invited') || lookup('section').find(el=>
+    /The invitation/i.test(el.textContent) && /Awaiting to welcome all family members/i.test(el.textContent));
+  const hero=lookup('section').find(el=>/Wedding Celebrations/i.test(el.textContent) && /Scroll down/i.test(el.textContent))
+    || document.querySelector('.hero-screen')
+    || (repeatCard && repeatCard.previousElementSibling);
+  if(repeatCard && hero && repeatCard!==hero){
+    const scrollLine=lookup('*').find(el=>el.parentElement && hero.contains(el) && el.children.length===0 && /Scroll down/i.test(el.textContent.trim()));
+    const host=scrollLine?.parentElement || hero.querySelector('h2')?.parentElement || hero;
+    if(!hero.querySelector('[data-merged-invitation]')){
+      const intro=document.createElement('p');
+      intro.setAttribute('data-merged-invitation','true');
+      intro.textContent='Mr & Mrs Waheed ul haq gill and the Gill family cordially invite you and your loved ones to the wedding celebrations.';
+      intro.style.cssText='font-family:"DM Sans",sans-serif;font-size:clamp(14px,1.85vw,17px);font-weight:700;line-height:1.65;color:#f3e8d1;max-width:550px;text-align:center;margin:14px auto 0;';
+      const welcome=document.createElement('p');
+      welcome.textContent='Awaiting to welcome all family members and friends.';
+      welcome.style.cssText='font-family:"DM Sans",sans-serif;font-size:clamp(14px,1.85vw,17px);font-weight:700;line-height:1.6;color:#f3e8d1;max-width:550px;text-align:center;margin:7px auto 0;';
+      if(scrollLine){host.insertBefore(intro,scrollLine);host.insertBefore(welcome,scrollLine)}
+      else {host.appendChild(intro);host.appendChild(welcome)}
+    }
+    repeatCard.remove();
+  }
+  // Preserve the dua and its translation immediately after the merged cover.
+  const duaSection=lookup('section').find(el=>el.classList.contains('blessing-section') ||
+    (el.querySelector('.blessing-quote')?.textContent||'').includes('May Allah bless you'));
+  if(duaSection){
+    const h2=duaSection.querySelector('h2');
+    if(h2){h2.textContent='بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ';h2.setAttribute('lang','ar');h2.setAttribute('dir','rtl')}
+  }
+  // Ensure the exact RSVP names and contact details are visible in the existing RSVP layout.
+  if(rsvp){
+    const paras=Array.from(rsvp.querySelectorAll('p'));
+    const names=paras.find(el=>/Arsal Gill|Sami Gill/i.test(el.textContent));
+    if(names)names.textContent='Waheed Gill, Sami Gill, Arsal Gill';
+    const contact=paras.find(el=>/Contact numbers|03052546295/i.test(el.textContent));
+    if(contact)contact.innerHTML='<a href="tel:+923052546295">03052546295</a>';
+  }
+  // Only correct the hero couple-name line breaks; preserve the existing heading typography.
+  const heroForNames=document.querySelector('.hero-screen') || lookup('section').find(el=>
+    /Wedding Celebrations/i.test(el.textContent) && /Scroll down/i.test(el.textContent));
+  if(heroForNames){
+    const exact=/Haziq Gill\s*&\s*Laveeza Tahir/i;
+    const nameElement=Array.from(heroForNames.querySelectorAll('*'))
+      .filter(el=>exact.test(el.textContent.trim()))
+      .sort((a,b)=>a.textContent.trim().length-b.textContent.trim().length)[0];
+    if(nameElement){
+      nameElement.innerHTML='<span style="display:block;white-space:nowrap">Haziq Gill</span><span style="display:block;color:#caa765;line-height:.75">&amp;</span><span style="display:block;white-space:nowrap">Laveeza Tahir</span>';
+    }
+  }
+  // Show the contact number in RSVP even if the original section had no contact placeholder.
+  if(rsvp){
+    let contact=Array.from(rsvp.querySelectorAll('p'))
+      .find(p=>/Contact numbers|Contact\s*:|03052546295/i.test(p.textContent));
+    if(!contact){contact=document.createElement('p');rsvp.querySelector('.content-inner')?.appendChild(contact) || rsvp.appendChild(contact);}
+    contact.innerHTML='Contact: <a href="tel:+923052546295">03052546295</a>';
+  }
+  // The calendar function in the original page may contain the old Walima time/location;
+  // update text in calendar generation through an event-scoped click listener if present.
+  document.addEventListener('click',function(e){
+    const b=e.target.closest('button'); if(!b || !/Add all events to calendar/i.test(b.textContent))return;
+  },true);
+})();`;
+    const walimaPatch=String.raw`(function(){
+  // Walima-only edition. The preceding script retains the existing styles, imagery and dua.
+  document.title='Haziq Gill & Laveeza Tahir | Walima Invitation';
+  const meta=document.querySelector('meta[name="description"]');
+  if(meta)meta.content='The Gill family invites you to the Walima of Haziq Gill and Laveeza Tahir on 26 December 2026 at 7:00 PM in Jahanian, Pakistan.';
+  const hero=document.querySelector('.hero-screen') || Array.from(document.querySelectorAll('section')).find(s=>/Wedding Celebrations/.test(s.textContent)&&/Scroll down/i.test(s.textContent));
+  const replaceText=(root, replacements)=>{
+    if(!root) return;
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+    while(walker.nextNode()){
+      let t=walker.currentNode;
+      if(t.parentElement && /^(SCRIPT|STYLE)$/i.test(t.parentElement.tagName))continue;
+      let v=t.nodeValue;
+      for(const [re,next] of replacements)v=v.replace(re,next);
+      if(t.nodeValue!==v)t.nodeValue=v;
+    }
+  };
+  // Keep the cover's original font, floral artwork, couple illustration and layout.
+  replaceText(hero, [
+    [/Wedding Celebrations/g,'Walima Celebrations'],
+    [/\bWedding\b/g,'Walima'],
+    [/24\s*[·•\-–]\s*25\s*[·•\-–]\s*26\s*DECEMBER\s*2026/gi,'26 DECEMBER 2026'],
+    [/24\s*[·•\-–]\s*25\s*[·•\-–]\s*26\s*DEC\s*2026/gi,'26 DECEMBER 2026'],
+    [/24\s*[-–]\s*26\s*December\s*2026/gi,'26 December 2026']
+  ]);
+  const invite=hero?.querySelector('[data-merged-invitation]');
+  if(invite)invite.textContent='Mr & Mrs Waheed ul haq gill and the Gill family cordially invite you and your loved ones to the Walima celebration.';
+  // A Walima-only invitation shows only the confirmed Walima date, never Mehndi/Barat cards.
+  const cards=Array.from(document.querySelectorAll('.event'));
+  for(const card of cards){
+    if(!/^walima$/i.test(card.querySelector('h3')?.textContent.trim()||''))card.remove();
+  }
+  const walima=Array.from(document.querySelectorAll('.event')).find(e=>/^walima$/i.test(e.querySelector('h3')?.textContent.trim()||''));
+  if(walima){
+    const when=walima.querySelector('.when');if(when)when.textContent='Saturday, 26 December 2026';
+    const time=walima.querySelector('.time');if(time)time.textContent='7:00 PM';
+    const detail=walima.querySelector('.detail');if(detail)detail.textContent='Qasr Al Hamra Marquee Jahanian';
+    const group=walima.closest('.events');if(group){group.style.gridTemplateColumns='minmax(0, 360px)';group.style.justifyContent='center';}
+  }
+  // Remove unrelated multi-day itineraries; preserve the dua, venue, RSVP and other layout.
+  document.querySelectorAll('.program').forEach(p=>{
+    if(/Mehndi|Barat|Baraat/i.test(p.textContent)){
+      const s=p.closest('section');if(s && s!==hero)s.remove();else p.remove();
+    }
+  });
+  // The countdown now ends at 7 PM Pakistan time on Walima day (UTC 14:00).
+  const target=Date.UTC(2026,11,26,14,0,0);
+  const countdown=document.querySelector('.countdown');
+  if(countdown){
+    countdown.setAttribute('aria-label','Countdown to Walima on 26 December 2026 at 7:00 PM Pakistan time');
+    const box=countdown.parentElement;
+    if(box){
+      Array.from(box.querySelectorAll('p')).forEach(p=>{
+        if(/Until Mehndi begins|24 December 2026, 9 PM/i.test(p.textContent))p.textContent='Until Walima — 26 December 2026, 7:00 PM (Pakistan time)';
+      });
+    }
+    const tick=()=>{
+      let t=Math.max(0,Math.floor((target-Date.now())/1000));
+      const v=[Math.floor(t/86400),Math.floor(t/3600)%24,Math.floor(t/60)%60,t%60];
+      const ids=['days','hours','minutes','seconds'];
+      const fallback=Array.from(countdown.querySelectorAll('.counter b, .counter strong, .counter span:first-child'));
+      v.forEach((n,i)=>{
+        const el=countdown.querySelector('#'+ids[i])||countdown.querySelector('#'+['d','h','m','s'][i])||fallback[i];
+        if(el)el.textContent=String(n).padStart(2,'0');
+      });
+    };
+    tick();setInterval(tick,250);
+  }
+  // In date, footer and closing sections, show only the Walima date.
+  replaceText(document.querySelector('.footer'),[
+    [/24\s*[·•\-–]\s*25\s*[·•\-–]\s*26\s*DECEMBER\s*2026/gi,'26 DECEMBER 2026'],
+    [/24\s*[-–]\s*26\s*DECEMBER\s*2026/gi,'26 DECEMBER 2026']
+  ]);
+  for(const btn of Array.from(document.querySelectorAll('button,a'))){
+    if(/Add all events to calendar/i.test(btn.textContent)){
+      // Prevent creating calendar entries for the two celebrations omitted here.
+      btn.remove();
+    }
+  }
+  // Use exactly the provided venue, contact and RSVP details.
+  const venue=document.querySelector('.venue');
+  if(venue){
+    const name=venue.querySelector('strong');if(name)name.textContent='Qasr Al Hamra Marquee Jahanian';
+    const p=venue.querySelector('p');if(p)p.textContent='Jahanian, Pakistan · Saturday, 26 December 2026 · 7:00 PM';
+    const a=venue.querySelector('a');if(a){a.href='https://maps.app.goo.gl/2snWMErjbuxS7yBT8?g_st=ic';a.target='_blank';a.rel='noopener noreferrer';}
+  }
+  const rsvp=Array.from(document.querySelectorAll('section')).find(s=>s.querySelector('h2')?.textContent.trim()==='RSVP');
+  if(rsvp){
+    const names=Array.from(rsvp.querySelectorAll('p')).find(p=>/Arsal Gill|Sami Gill/i.test(p.textContent));
+    if(names)names.textContent='Waheed Gill, Sami Gill, Arsal Gill';
+    let contact=Array.from(rsvp.querySelectorAll('p')).find(p=>/03052546295|Contact/i.test(p.textContent));
+    if(!contact){contact=document.createElement('p');(rsvp.querySelector('.content-inner')||rsvp).appendChild(contact);}
+    contact.innerHTML='Contact: <a href="tel:+923052546295">03052546295</a>';
+  }
+})();`;
+    html=html.replace(/<\/body>/i,'<scr'+'ipt>'+patch+'</scr'+'ipt>'+'<scr'+'ipt>'+walimaPatch+'</scr'+'ipt>\n</body>');
+    if(!html.includes('data-merged-invitation'))throw new Error('Could not apply invitation changes.');
+    document.open();document.write(html);document.close();
+  }catch(error){
+    status.textContent='Could not load the original invitation: '+error.message+' Please connect to the internet and reopen this HTML file.';
+  }
+})();
+</script>
+</body></html>
